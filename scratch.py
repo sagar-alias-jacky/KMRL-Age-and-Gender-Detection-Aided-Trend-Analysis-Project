@@ -1,10 +1,11 @@
-import os
-from natsort import natsorted
+video_path="test_videos/SN Junction_Monday_20-03-2023_7:00.mp4"
 
-path='video_frames'
-nl=sorted(os.listdir(path),key=lambda x: int(os.path.splitext(x.split('_')[1])[0]))
-# nl=sorted(nl)
-print(nl)
+x=video_path.split("/")
+print(x)
 
-for filename in nl:
-    print('video_frames/'+filename)
+y=x[-1].split("_")
+station=y[0]
+day=y[1]
+date=y[2]
+time=y[3].split(".")[0]
+print(time)

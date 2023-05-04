@@ -22,73 +22,122 @@ logging.basicConfig(
     datefmt="%Y-%m-%d %H:%M:%S",
 )
 
-gender_graph_dict = {}
-age_graph_dict = {'1-2': 0, '3-9': 0, '10-20': 0,
-                  '21-27': 0, '28-45': 0, '46-65': 0, 'Above 65': 0}
+count_dict = {
+    "M0_16": 0,
+    "M17_30": 0,
+    "M31_45": 0,
+    "M45_": 0,
+    "F0_16": 0,
+    "F17_30": 0,
+    "F31_45": 0,
+    "F45_": 0
+}
 
 
 def initialize_csv():
-    # path = 'output.csv'
-    # isExist = os.path.exists(path)
-    # print(isExist)
-    # if isExist == False:
-    header = ['Gender', 'Age']
-    with open('output.csv', 'w', encoding='UTF8') as f:
-        writer = csv.writer(f)
-        # write the header
-        writer.writerow(header)
-
-
-def select_age_group(age):
-    if 1 <= age <= 2:
-        return '1-2'
-    elif 3 <= age <= 9:
-        return '3-9'
-    elif 10 <= age <= 20:
-        return '10-20'
-    elif 21 <= age <= 27:
-        return '21-27'
-    elif 28 <= age <= 45:
-        return '28-45'
-    elif 46 <= age <= 65:
-        return '46-65'
-    else:
-        return 'Above 65'
-
-
-def extract_data_into_csv(genders, ages):
-    for index in range(0, len(genders)):
-
-        data = []
-
-        if genders[index]['m'] > genders[index]['f']:
-            gender = 'Male'
-        else:
-            gender = 'Female'
-
-        data.append(gender)
-
-        age = round(ages[index]['mean'])
-
-        age = select_age_group(age)
-
-        data.append(age)
-        print(data)
-
-        if data[0] not in gender_graph_dict.keys():
-            gender_graph_dict[data[0]] = 1
-        else:
-            gender_graph_dict[data[0]] += 1
-
-        if data[1] not in age_graph_dict.keys():
-            age_graph_dict[data[1]] = 1
-        else:
-            age_graph_dict[data[1]] += 1
-
-        with open('output.csv', 'a+', encoding='UTF8') as f:
+    path = 'output.csv'
+    isExist = os.path.exists(path)
+    print(isExist)
+    if isExist == False:
+        header = ['Datetime', 'M0_16', 'M17_30', 'M31_45',
+                  'M45_', 'F0_16', 'F17_30', 'F31_45', 'F45_']
+        with open('output.csv', 'w', encoding='UTF8') as f:
             writer = csv.writer(f)
             # write the header
-            writer.writerow(data)
+            writer.writerow(header)
+
+
+def select_group(gender, age):
+    if gender == "Male":
+        if age >= 0 and age <= 16:
+            return "M0_16"
+        elif age >= 17 and age <= 30:
+            return "M17_30"
+        elif age >= 31 and age <= 45:
+            return "M31_45"
+        elif age > 45:
+            return "M45_"
+    elif gender == "Female":
+        if age >= 0 and age <= 16:
+            return "F0_16"
+        elif age >= 17 and age <= 30:
+            return "F17_30"
+        elif age >= 31 and age <= 45:
+            return "F31_45"
+        elif age > 45:
+            return "F45_"
+
+
+def calculate_group_count(genders, ages):
+
+    logging.debug(genders)
+
+    for index in range(0, len(genders)):
+
+        if genders[index]['m'] > genders[index]['f']:
+            gender = "Male"
+        else:
+            gender = "Female"
+
+        logging.debug(gender)
+        age = round(ages[index]['mean'])
+        logging.error(age)
+        group = select_group(gender, age)
+        logging.error(group)
+
+        if group == "M0_16":
+            count_dict["M0_16"] += 1
+        elif group == "M17_30":
+            count_dict["M17_30"] += 1
+        elif group == "M31_45":
+            count_dict["M31_45"] += 1
+        elif group == "M45_":
+            count_dict["M45_"] += 1
+        elif group == "F0_16":
+            count_dict["F0_16"] += 1
+        elif group == "F17_30":
+            count_dict["F17_30"] += 1
+        elif group == "F31_45":
+            count_dict["F31_45"] += 1
+        elif group == "F45_":
+            count_dict["F45_"] += 1
+
+
+def extract_data_into_csv(video_path):
+
+    if video_path != "":
+        x = video_path.split('/')
+        y = x[-1].split("_")
+        print(y)
+        datetime = y[0]+" "+y[1].split(".")[0]
+    else:
+        datetime = "NIL"
+
+    data = []
+    category_list = ["M0_16", "M17_30", "M31_45",
+                     "M45_", "F0_16", "F17_30", "F31_45", "F45_"]
+    data.append(datetime)
+
+    # if genders[index]['m'] > genders[index]['f']:
+    #     gender = 'Male'
+    # else:
+    #     gender = 'Female'
+
+    # age = round(ages[index]['mean'])
+
+    # group = select_group(gender, age)
+
+    # data.append(age)
+
+    for category in category_list:
+        data.append(count_dict[category])
+
+    print(data)
+
+    with open('output.csv', 'a+', encoding='UTF8') as f:
+        writer = csv.writer(f)
+        # write the header
+        writer.writerow(data)
 
 
 def video_to_frames(path):
@@ -100,7 +149,7 @@ def video_to_frames(path):
     frameNr = 0
     fps = capture.get(cv2.CAP_PROP_FPS)
     print(fps)
-    gap = round(fps)
+    gap = round(fps*5)
     print(gap)
 
     while (True):
@@ -243,7 +292,7 @@ def save_annotated_image(
     logging.info(f"features saved at at {save_path + '.pkl'}")
 
 
-def run_image(url_face: str, url_age_gender: str, image_path: str):
+def run_image(url_face: str, url_age_gender: str, image_path: str, video_path=""):
     """Run age-gender on the image.
 
     Args
@@ -264,7 +313,7 @@ def run_image(url_face: str, url_age_gender: str, image_path: str):
     print(genders)
     print(ages)
 
-    extract_data_into_csv(genders, ages)
+    calculate_group_count(genders, ages)
 
     image = Image.open(image_path)
 
@@ -344,52 +393,6 @@ def run_webcam(url_face: str, url_age_gender: str, camera_id: int):
     cv2.destroyAllWindows()
 
 
-def print_age_graph():
-    # Print Age Graph
-    x = age_graph_dict.keys()
-
-    y = []
-    for key in age_graph_dict.keys():
-        y.append(age_graph_dict[key])
-
-    # plotting the points
-    plt.plot(x, y)
-    # naming the x axis
-    plt.xlabel('x - axis')
-    # naming the y axis
-    plt.ylabel('y - axis')
-    # giving a title to my graph
-    plt.title('Age Trend Graph')
-    # function to show the plot
-    plt.savefig('age_trend_graph')
-    plt.close()
-    print(x)
-    print(y)
-
-
-def print_gender_graph():
-    # Print Age Graph
-    x = gender_graph_dict.keys()
-
-    y = []
-    for key in gender_graph_dict.keys():
-        y.append(gender_graph_dict[key])
-
-    # plotting the points
-    plt.plot(x, y)
-    # naming the x axis
-    plt.xlabel('x - axis')
-    # naming the y axis
-    plt.ylabel('y - axis')
-    # giving a title to my graph
-    plt.title('Gender Trend Graph')
-    # function to show the plot
-    plt.savefig('gender_trend_graph')
-    plt.close()
-    print(x)
-    print(y)
-
-
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
         description="Extract face, gender, and age.")
@@ -428,8 +431,9 @@ if __name__ == "__main__":
         for filename in nl:
             run_image('http://127.0.0.1:10002/',
                       'http://127.0.0.1:10003/', 'video_frames/'+filename)
-        print_age_graph()
-        print_gender_graph()
+        extract_data_into_csv(args["video_path"])
+        # print_age_graph()
+        # print_gender_graph()
     else:
         del args["image_path"]
         run_webcam(**args)
